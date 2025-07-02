@@ -2,20 +2,19 @@
 
 #include <string>
 #include <vector>
+#include <unordered_set>
 #include "imgui.h" 
-
 
 struct CodeDocument {
     std::string filePath;
     std::string fileName;
     std::string content;
     std::string processedContent; 
-    bool showProcessed = false;   
+    bool showProcessed = false;  
     bool showComments = true;    
-    int language = 0;             
-    bool open = true;             
+    int language = 0;            
+    bool open = true;            
 
-    
     CodeDocument(std::string path = "", std::string name = "", std::string data = "")
         : filePath(std::move(path)),
         fileName(std::move(name)),
@@ -24,8 +23,6 @@ struct CodeDocument {
         open(true) 
     {}
 };
-
-
 
 struct SyntaxColors {
     ImVec4 keyword = ImVec4(0.20f, 0.60f, 0.90f, 1.0f); 
@@ -40,12 +37,14 @@ struct SyntaxColors {
     ImVec4 default_text = ImVec4(0.90f, 0.91f, 0.92f, 1.0f); 
 };
 
+extern const std::unordered_set<std::string> cppKeywords;
+extern const std::unordered_set<std::string> pythonKeywords;
+extern const std::unordered_set<std::string> jsKeywords;
+extern const std::unordered_set<std::string> cssKeywords;
+extern const std::unordered_set<std::string> htmlKeywords;
 
 void ShowCodeViewerUI(bool* p_open, std::vector<CodeDocument>& documents, int& activeDocIndex);
 
-
 bool LoadFileContent(const char* path, std::string& content);
 
-
 void ProcessCodeContent(CodeDocument& doc);
-

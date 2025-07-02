@@ -1,7 +1,6 @@
 ﻿#include "code_editor.h"
 #include "imgui.h"
 #include "code_capture.h"
-
 #include "tinyfiledialogs.h" 
 #include <fstream>           
 #include <sstream>           
@@ -12,7 +11,6 @@
 #include <exception>         
 #include <cctype>            
 #include <cmath>             
-
 
 const std::unordered_set<std::string> cppKeywords = {
     "int", "float", "double", "char", "bool", "void", "class", "struct", "enum", "union",
@@ -36,18 +34,14 @@ const std::unordered_set<std::string> htmlKeywords = {
 };
 
 
-
-
 std::string get_file_ext(const std::string& fname) {
     size_t dot_pos = fname.find_last_of(".");
     if (dot_pos == std::string::npos) return "";
     return fname.substr(dot_pos + 1);
 }
 
-
 int detect_lang(const std::string& fname) {
     std::string ext = get_file_ext(fname);
-    
     std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
     if (ext == "cpp" || ext == "h" || ext == "hpp" || ext == "cxx" || ext == "hxx" || ext == "c") return 0; 
     if (ext == "py" || ext == "pyw") return 1; 
@@ -56,7 +50,6 @@ int detect_lang(const std::string& fname) {
     if (ext == "js") return 4; 
     return -1; 
 }
-
 
 bool load_file_str(const char* path, std::string& content_out) {
     std::ifstream file(path, std::ios::binary | std::ios::ate); 
@@ -67,7 +60,6 @@ bool load_file_str(const char* path, std::string& content_out) {
     std::streamsize len = file.tellg(); 
     file.seekg(0, std::ios::beg); 
 
-    
     const long long max_size = 20LL * 1024 * 1024; 
     if (len > max_size || len < 0) {
         tinyfd_messageBox("Error", len > max_size ? "File too big (> 20MB)" : "Bad file size", "ok", "error", 1);
@@ -104,7 +96,6 @@ bool load_file_str(const char* path, std::string& content_out) {
     return true; 
 }
 
-
 std::string strip_em(const std::string& code, int lang) {
     std::string result = "";
     std::stringstream ss(code);
@@ -115,7 +106,6 @@ std::string strip_em(const std::string& code, int lang) {
         std::string processed_line = "";
         bool line_had_content = false; 
 
-        
         if (lang == 0 || lang == 4 || lang == 3) {
             size_t current_pos = 0;
             while (current_pos < line.length()) {
@@ -130,7 +120,6 @@ std::string strip_em(const std::string& code, int lang) {
                     }
                 }
                 else {
-                    
                     size_t single_comment = (lang == 0 || lang == 4) ? line.find("//", current_pos) : std::string::npos;
                     size_t multi_comment_start = line.find("/*", current_pos);
 
@@ -145,29 +134,24 @@ std::string strip_em(const std::string& code, int lang) {
                         next_comment_start = multi_comment_start;
                     }
 
-                    
                     if (next_comment_start == std::string::npos) {
                         processed_line += line.substr(current_pos);
-                        
                         if (!line.substr(current_pos).empty() && line.substr(current_pos).find_first_not_of(" \t\r\n") != std::string::npos) {
                             line_had_content = true;
                         }
                         break; 
                     }
 
-                    
                     processed_line += line.substr(current_pos, next_comment_start - current_pos);
                     if (!line.substr(current_pos, next_comment_start - current_pos).empty() && line.substr(current_pos, next_comment_start - current_pos).find_first_not_of(" \t\r\n") != std::string::npos) {
                         line_had_content = true;
                     }
 
 
-                    
                     if (next_comment_start == single_comment) {
                         break; 
                     }
                     else { 
-                        
                         size_t end_comment = line.find("*/", next_comment_start + 2);
                         if (end_comment != std::string::npos) {
                             current_pos = end_comment + 2; 
@@ -180,16 +164,13 @@ std::string strip_em(const std::string& code, int lang) {
                 }
             }
         }
-        
         else if (lang == 1) {
             size_t comment_pos = line.find("#");
             processed_line += line.substr(0, comment_pos); 
             if (!processed_line.empty() && processed_line.find_first_not_of(" \t\r\n") != std::string::npos) {
                 line_had_content = true;
             }
-            
         }
-        
         else {
             processed_line += line;
             if (!processed_line.empty() && processed_line.find_first_not_of(" \t\r\n") != std::string::npos) {
@@ -197,7 +178,6 @@ std::string strip_em(const std::string& code, int lang) {
             }
         }
 
-        
         size_t endpos = processed_line.find_last_not_of(" \t\r\n");
         if (std::string::npos != endpos) {
             processed_line = processed_line.substr(0, endpos + 1);
@@ -206,7 +186,6 @@ std::string strip_em(const std::string& code, int lang) {
             processed_line.clear(); 
         }
 
-        
         if (!processed_line.empty() || line_had_content) {
             result += processed_line + "\n";
         }
@@ -215,18 +194,14 @@ std::string strip_em(const std::string& code, int lang) {
 }
 
 
-
 void process_code(CodeDocument& doc) {
     if (doc.showComments) {
-        
         if (doc.processedContent.size() != doc.content.size() || doc.processedContent != doc.content) {
             doc.processedContent = doc.content;
         }
     }
     else {
-        
         std::string stripped = strip_em(doc.content, doc.language);
-        
         if (doc.processedContent.size() != stripped.size() || doc.processedContent != stripped) {
             doc.processedContent = std::move(stripped); 
         }
@@ -234,21 +209,16 @@ void process_code(CodeDocument& doc) {
 }
 
 
-
 void ShowCodeViewerUI(bool* p_open, std::vector<CodeDocument>& docs, int& active_doc_idx)
 {
-    
     if (p_open && !*p_open) {
         return;
     }
 
-    
     static const SyntaxColors syntaxColors;
 
-    
     ImGuiWindowFlags win_flags = ImGuiWindowFlags_MenuBar;
 
-    
     ImGuiViewport* viewport = ImGui::GetMainViewport();
     if (viewport) {
         ImVec2 center_pos = ImVec2(viewport->WorkPos.x + viewport->WorkSize.x * 0.5f,
@@ -262,14 +232,11 @@ void ShowCodeViewerUI(bool* p_open, std::vector<CodeDocument>& docs, int& active
         ImGui::SetNextWindowSize(ImVec2(800, 600), ImGuiCond_FirstUseEver);
     }
 
-    
     if (!ImGui::Begin("Code Viewer", p_open, win_flags)) {
-        
         ImGui::End();
         return;
     }
 
-    
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Open File...")) {
@@ -313,7 +280,6 @@ void ShowCodeViewerUI(bool* p_open, std::vector<CodeDocument>& docs, int& active
     }
 
 
-    
     ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_Reorderable | ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_FittingPolicyScroll;
     if (ImGui::BeginTabBar("CodeTabs", tab_bar_flags)) {
         int doc_to_close_idx = -1;
@@ -322,16 +288,13 @@ void ShowCodeViewerUI(bool* p_open, std::vector<CodeDocument>& docs, int& active
             active_doc_idx = docs.empty() ? -1 : docs.size() - 1;
         }
 
-        
         static std::vector<bool> in_multiline_comment_states;
-        
         if (in_multiline_comment_states.size() < docs.size()) {
             in_multiline_comment_states.resize(docs.size(), false);
         }
 
 
         for (int n = 0; n < docs.size(); ++n) {
-            
             if (n >= in_multiline_comment_states.size()) {
                 in_multiline_comment_states.resize(n + 1, false);
             }
@@ -349,30 +312,24 @@ void ShowCodeViewerUI(bool* p_open, std::vector<CodeDocument>& docs, int& active
             if (tab_visible) {
                 if (ImGui::IsItemActivated() || (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows) && active_doc_idx != n)) {
                     active_doc_idx = n;
-                    
-                    
                 }
 
-                
                 ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8.0f, 8.0f));
                 if (ImGui::Checkbox("Show Comments", &current_doc.showComments)) {
                     process_code(current_doc); 
-                    
                     if (n < in_multiline_comment_states.size()) in_multiline_comment_states[n] = false; 
                 }
                 ImGui::SameLine(); ImGui::TextDisabled("(Lang: %d)", current_doc.language); 
 
-                
                 ImGui::SameLine(); 
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.3f, 0.7f, 0.3f, 1.0f)); 
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.4f, 0.8f, 0.4f, 1.0f));
                 ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.5f, 0.9f, 0.5f, 1.0f));
                 if (ImGui::Button("Save as Image")) {
-                    
-                    capture_code_img(current_doc);
+                    extern ImFont* g_pCodeFont; 
+                    capture_code_to_image(current_doc, syntaxColors, g_pCodeFont);
                 }
                 ImGui::PopStyleColor(3); 
-                
 
 
                 ImGui::Separator();
@@ -384,7 +341,6 @@ void ShowCodeViewerUI(bool* p_open, std::vector<CodeDocument>& docs, int& active
                 extern ImFont* g_pCodeFont;
                 if (g_pCodeFont) ImGui::PushFont(g_pCodeFont);
 
-                
                 int line_count = 0;
                 for (char c : current_doc.processedContent) { if (c == '\n') line_count++; }
                 if (!current_doc.processedContent.empty() && current_doc.processedContent.back() != '\n') line_count++;
@@ -392,16 +348,13 @@ void ShowCodeViewerUI(bool* p_open, std::vector<CodeDocument>& docs, int& active
                 char line_no_fmt[16];
                 int max_digits = (line_count == 0) ? 1 : ((int)log10(line_count) + 1); 
                 sprintf_s(line_no_fmt, sizeof(line_no_fmt), "%%-%dd | ", max_digits);
-                
                 char max_line_no_str[16];
                 sprintf_s(max_line_no_str, sizeof(max_line_no_str), "%d | ", line_count);
                 float line_no_width = ImGui::CalcTextSize(max_line_no_str).x;
 
-                
                 std::stringstream ss(current_doc.processedContent);
                 std::string line;
                 int current_line_num = 1;
-                
 
                 while (std::getline(ss, line)) {
                     ImGui::TextDisabled(line_no_fmt, current_line_num++);
@@ -410,8 +363,6 @@ void ShowCodeViewerUI(bool* p_open, std::vector<CodeDocument>& docs, int& active
                     size_t current_pos = 0;
                     while (current_pos < line.length()) {
 
-                        
-                        
                         if (current_doc.showComments && n < in_multiline_comment_states.size() && in_multiline_comment_states[n]) {
                             size_t end_comment_pos = line.find("*/", current_pos);
                             size_t render_until = line.length();
@@ -435,9 +386,7 @@ void ShowCodeViewerUI(bool* p_open, std::vector<CodeDocument>& docs, int& active
                             if (current_pos < line.length()) { ImGui::SameLine(0.0f, 0.0f); }
                             continue;
                         }
-                        
 
-                        
                         size_t start_token = current_pos;
                         while (start_token < line.length() && isspace(line[start_token])) {
                             start_token++;
@@ -457,7 +406,6 @@ void ShowCodeViewerUI(bool* p_open, std::vector<CodeDocument>& docs, int& active
                         ImVec4 current_color = syntaxColors.default_text;
                         size_t next_pos = current_pos + 1;
 
-                        
                         bool comment_handled = false;
                         if (current_doc.showComments && n < in_multiline_comment_states.size()) { 
                             size_t single_line_comment_pos = std::string::npos;
@@ -498,16 +446,12 @@ void ShowCodeViewerUI(bool* p_open, std::vector<CodeDocument>& docs, int& active
                                 }
                             }
                         }
-                        
 
-                        
                         if (!comment_handled) {
-                            
                             if (current_doc.language == 0 && c == '#') {
                                 current_color = syntaxColors.preprocessor;
                                 next_pos = line.length();
                             }
-                            
                             else if (c == '"' || c == '\'' || (current_doc.language == 4 && c == '`')) {
                                 current_color = syntaxColors.string_literal;
                                 char string_char = c;
@@ -522,14 +466,12 @@ void ShowCodeViewerUI(bool* p_open, std::vector<CodeDocument>& docs, int& active
                                     next_pos++;
                                 }
                             }
-                            
                             else if (current_doc.language == 2 && c == '<') {
                                 current_color = syntaxColors.html_tag;
                                 next_pos = current_pos + 1;
                                 while (next_pos < line.length() && line[next_pos] != '>') { next_pos++; }
                                 if (next_pos < line.length()) next_pos++;
                             }
-                            
                             else if (current_doc.language == 3) {
                                 next_pos = current_pos; 
                                 if (isalpha(c) || c == '.' || c == '#') {
@@ -548,7 +490,6 @@ void ShowCodeViewerUI(bool* p_open, std::vector<CodeDocument>& docs, int& active
                                     next_pos = current_pos + 1;
                                 }
                             }
-                            
                             else if (isalpha(c) || c == '_') {
                                 next_pos = current_pos;
                                 while (next_pos < line.length() && (isalnum(line[next_pos]) || line[next_pos] == '_')) { next_pos++; }
@@ -559,13 +500,11 @@ void ShowCodeViewerUI(bool* p_open, std::vector<CodeDocument>& docs, int& active
                                 else if (current_doc.language == 4 && jsKeywords.count(token)) is_keyword = true;
                                 if (is_keyword) current_color = syntaxColors.keyword;
                             }
-                            
                             else if (isdigit(c) || (c == '.' && current_pos + 1 < line.length() && isdigit(line[current_pos + 1]))) {
                                 next_pos = current_pos;
                                 while (next_pos < line.length() && (isdigit(line[next_pos]) || line[next_pos] == '.' || tolower(line[next_pos]) == 'f')) { next_pos++; }
                                 current_color = syntaxColors.number_literal;
                             }
-                            
                             else {
                                 next_pos = current_pos + 1;
                             }
@@ -589,7 +528,6 @@ void ShowCodeViewerUI(bool* p_open, std::vector<CodeDocument>& docs, int& active
                 ImGui::EndTabItem();
             } 
             else {
-                
                 if (n < in_multiline_comment_states.size()) {
                     in_multiline_comment_states[n] = false;
                 }
@@ -597,7 +535,6 @@ void ShowCodeViewerUI(bool* p_open, std::vector<CodeDocument>& docs, int& active
 
         } 
 
-        
         if (doc_to_close_idx != -1) {
             if (doc_to_close_idx < in_multiline_comment_states.size()) {
                 in_multiline_comment_states.erase(in_multiline_comment_states.begin() + doc_to_close_idx);
@@ -625,5 +562,3 @@ void ShowCodeViewerUI(bool* p_open, std::vector<CodeDocument>& docs, int& active
 
     ImGui::End(); 
 }
-
-

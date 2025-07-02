@@ -1,13 +1,11 @@
 #include "ui_style.h"
 #include "imgui.h" 
 
-
 void ApplyCodeViewerStyle()
 {
     ImGuiStyle& style = ImGui::GetStyle();
     ImVec4* colors = style.Colors;
 
-    
     ImVec4 bg_main = ImVec4(0.11f, 0.12f, 0.13f, 1.00f); 
     ImVec4 bg_secondary = ImVec4(0.16f, 0.17f, 0.19f, 1.00f); 
     ImVec4 bg_frame = ImVec4(0.08f, 0.08f, 0.09f, 1.00f); 
@@ -74,7 +72,6 @@ void ApplyCodeViewerStyle()
     colors[ImGuiCol_NavWindowingDimBg]      = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
     colors[ImGuiCol_ModalWindowDimBg]       = ImVec4(0.1f, 0.1f, 0.12f, 0.6f); 
 
-    
     style.WindowRounding    = 6.0f;
     style.ChildRounding     = 4.0f;
     style.FrameRounding     = 4.0f;
@@ -83,14 +80,12 @@ void ApplyCodeViewerStyle()
     style.GrabRounding      = 4.0f;
     style.TabRounding       = 4.0f;
 
-    
     style.WindowBorderSize  = 1.0f;
     style.FrameBorderSize   = 0.0f; 
     style.PopupBorderSize   = 1.0f;
     style.ChildBorderSize   = 1.0f; 
     style.TabBorderSize     = 0.0f;
 
-    
     style.WindowPadding     = ImVec2(8.0f, 8.0f);
     style.FramePadding      = ImVec2(6.0f, 4.0f);
     style.ItemSpacing       = ImVec2(6.0f, 5.0f);
@@ -98,7 +93,6 @@ void ApplyCodeViewerStyle()
     style.ScrollbarSize     = 14.0f;
     style.GrabMinSize       = 12.0f;
 
-    
     style.WindowTitleAlign  = ImVec2(0.0f, 0.5f); 
     style.WindowMenuButtonPosition = ImGuiDir_Left;
     style.ButtonTextAlign   = ImVec2(0.5f, 0.5f); 
