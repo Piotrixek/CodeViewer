@@ -28,6 +28,8 @@ set(PROJECT_SOURCES
     code_editor.cpp    
     window_setup.cpp
     code_capture.cpp
+    ui_addons.cpp      
+    file_utils.cpp
 )
 
 set(IMGUI_BACKEND_SOURCES
